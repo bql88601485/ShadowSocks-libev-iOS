@@ -28,6 +28,6 @@
 
 #include "protocol.h"
 
-extern const protocol_t *const tls_protocol;
+const protocol_t *const tls_protocol;
 
 #endif

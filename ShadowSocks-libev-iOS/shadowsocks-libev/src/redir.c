@@ -2,7 +2,7 @@
  * redir.c - Provide a transparent TCP proxy through remote shadowsocks
  *           server
  *
- * Copyright (C) 2013 - 2018, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  *
@@ -61,10 +61,6 @@
 #define EWOULDBLOCK EAGAIN
 #endif
 
-#ifndef BUF_SIZE
-#define BUF_SIZE 2048
-#endif
-
 #ifndef IP6T_SO_ORIGINAL_DST
 #define IP6T_SO_ORIGINAL_DST 80
 #endif
@@ -93,9 +89,9 @@ static int mode      = TCP_ONLY;
 #ifdef HAVE_SETRLIMIT
 static int nofile = 0;
 #endif
-       int fast_open = 0;
-static int no_delay  = 0;
-static int ret_val   = 0;
+int fast_open       = 0;
+static int no_delay = 0;
+static int ret_val  = 0;
 
 static struct ev_signal sigint_watcher;
 static struct ev_signal sigterm_watcher;
@@ -196,7 +192,7 @@ server_recv_cb(EV_P_ ev_io *w, int revents)
     ev_timer_stop(EV_A_ & server->delayed_connect_watcher);
 
     ssize_t r = recv(server->fd, remote->buf->data + remote->buf->len,
-                     BUF_SIZE - remote->buf->len, 0);
+                     SOCKET_BUF_SIZE - remote->buf->len, 0);
 
     if (r == 0) {
         // connection closed
@@ -242,7 +238,7 @@ server_recv_cb(EV_P_ ev_io *w, int revents)
         return;
     }
 
-    int err = crypto->encrypt(remote->buf, server->e_ctx, BUF_SIZE);
+    int err = crypto->encrypt(remote->buf, server->e_ctx, SOCKET_BUF_SIZE);
 
     if (err) {
         LOGE("invalid password or cipher");
@@ -361,7 +357,7 @@ remote_recv_cb(EV_P_ ev_io *w, int revents)
     remote_t *remote              = remote_recv_ctx->remote;
     server_t *server              = remote->server;
 
-    ssize_t r = recv(remote->fd, server->buf->data, BUF_SIZE, 0);
+    ssize_t r = recv(remote->fd, server->buf->data, SOCKET_BUF_SIZE, 0);
 
     if (r == 0) {
         // connection closed
@@ -383,7 +379,7 @@ remote_recv_cb(EV_P_ ev_io *w, int revents)
 
     server->buf->len = r;
 
-    int err = crypto->decrypt(server->buf, server->d_ctx, BUF_SIZE);
+    int err = crypto->decrypt(server->buf, server->d_ctx, SOCKET_BUF_SIZE);
     if (err == CRYPTO_ERROR) {
         LOGE("invalid password or cipher");
         close_and_free_remote(EV_A_ remote);
@@ -450,7 +446,7 @@ remote_send_cb(EV_P_ ev_io *w, int revents)
             // send destaddr
             buffer_t ss_addr_to_send;
             buffer_t *abuf = &ss_addr_to_send;
-            balloc(abuf, BUF_SIZE);
+            balloc(abuf, SOCKET_BUF_SIZE);
 
             if (AF_INET6 == server->destaddr.ss_family) { // IPv6
                 abuf->data[abuf->len++] = 4;          // Type 4 is IPv6 address
@@ -476,7 +472,7 @@ remote_send_cb(EV_P_ ev_io *w, int revents)
 
             abuf->len += 2;
 
-            int err = crypto->encrypt(abuf, server->e_ctx, BUF_SIZE);
+            int err = crypto->encrypt(abuf, server->e_ctx, SOCKET_BUF_SIZE);
             if (err) {
                 LOGE("invalid password or cipher");
                 bfree(abuf);
@@ -485,7 +481,7 @@ remote_send_cb(EV_P_ ev_io *w, int revents)
                 return;
             }
 
-            err = crypto->encrypt(remote->buf, server->e_ctx, BUF_SIZE);
+            err = crypto->encrypt(remote->buf, server->e_ctx, SOCKET_BUF_SIZE);
             if (err) {
                 LOGE("invalid password or cipher");
                 bfree(abuf);
@@ -494,7 +490,7 @@ remote_send_cb(EV_P_ ev_io *w, int revents)
                 return;
             }
 
-            bprepend(remote->buf, abuf, BUF_SIZE);
+            bprepend(remote->buf, abuf, SOCKET_BUF_SIZE);
             bfree(abuf);
         } else {
             ERROR("getpeername");
@@ -588,7 +584,7 @@ new_remote(int fd, int timeout)
     remote->recv_ctx = ss_malloc(sizeof(remote_ctx_t));
     remote->send_ctx = ss_malloc(sizeof(remote_ctx_t));
     remote->buf      = ss_malloc(sizeof(buffer_t));
-    balloc(remote->buf, BUF_SIZE);
+    balloc(remote->buf, SOCKET_BUF_SIZE);
     memset(remote->recv_ctx, 0, sizeof(remote_ctx_t));
     memset(remote->send_ctx, 0, sizeof(remote_ctx_t));
     remote->fd                  = fd;
@@ -641,7 +637,7 @@ new_server(int fd)
     server->recv_ctx = ss_malloc(sizeof(server_ctx_t));
     server->send_ctx = ss_malloc(sizeof(server_ctx_t));
     server->buf      = ss_malloc(sizeof(buffer_t));
-    balloc(server->buf, BUF_SIZE);
+    balloc(server->buf, SOCKET_BUF_SIZE);
     memset(server->recv_ctx, 0, sizeof(server_ctx_t));
     memset(server->send_ctx, 0, sizeof(server_ctx_t));
     server->fd                  = fd;
@@ -874,7 +870,7 @@ main(int argc, char **argv)
         { "password",    required_argument, NULL, GETOPT_VAL_PASSWORD    },
         { "key",         required_argument, NULL, GETOPT_VAL_KEY         },
         { "help",        no_argument,       NULL, GETOPT_VAL_HELP        },
-        { NULL,                          0, NULL,                      0 }
+        { NULL,          0,                 NULL, 0                      }
     };
 
     opterr = 0;
@@ -1067,7 +1063,7 @@ main(int argc, char **argv)
             FATAL("failed to find a free port");
         }
         snprintf(tmp_port, 8, "%d", port);
-        if (is_ipv6only(remote_addr, remote_num)) {
+        if (is_ipv6only(remote_addr, remote_num, ipv6first)) {
             plugin_host = "::1";
         } else {
             plugin_host = "127.0.0.1";
@@ -1099,7 +1095,11 @@ main(int argc, char **argv)
 #endif
 
     if (local_addr == NULL) {
-        local_addr = "127.0.0.1";
+        if (is_ipv6only(remote_addr, remote_num, ipv6first)) {
+            local_addr = "::1";
+        } else {
+            local_addr = "127.0.0.1";
+        }
     }
 
     if (fast_open == 1) {

@@ -1,7 +1,7 @@
 /*
  * utils.c - Misc utilities
  *
- * Copyright (C) 2013 - 2018, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  *
@@ -550,4 +550,12 @@ get_default_conf(void)
 #else
     return "config.json";
 #endif
+}
+
+uint16_t
+load16_be(const void *s)
+{
+    const uint8_t *in = (const uint8_t *)s;
+    return ((uint16_t)in[0] << 8)
+           | ((uint16_t)in[1]);
 }

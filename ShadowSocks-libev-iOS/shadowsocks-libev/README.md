@@ -1,5 +1,7 @@
 # shadowsocks-libev
 
+[![Build Status](https://travis-ci.com/shadowsocks/shadowsocks-libev.svg?branch=master)](https://travis-ci.com/shadowsocks/shadowsocks-libev) [![Snap Status](https://build.snapcraft.io/badge/shadowsocks/shadowsocks-libev.svg)](https://build.snapcraft.io/user/shadowsocks/shadowsocks-libev)
+
 ## Intro
 
 [Shadowsocks-libev](https://shadowsocks.org) is a lightweight secured SOCKS5
@@ -9,9 +11,7 @@ It is a port of [Shadowsocks](https://github.com/shadowsocks/shadowsocks)
 created by [@clowwindy](https://github.com/clowwindy), and maintained by
 [@madeye](https://github.com/madeye) and [@linusyang](https://github.com/linusyang).
 
-Current version: 3.2.5 | [Changelog](debian/changelog)
-
-Travis CI: [![Travis CI](https://travis-ci.org/shadowsocks/shadowsocks-libev.svg?branch=master)](https://travis-ci.org/shadowsocks/shadowsocks-libev)
+Current version: 3.3.1 | [Changelog](debian/changelog)
 
 ## Features
 
@@ -21,21 +21,27 @@ to be a lightweight implementation of shadowsocks protocol, in order to keep the
 For a full list of feature comparison between different versions of shadowsocks,
 refer to the [Wiki page](https://github.com/shadowsocks/shadowsocks/wiki/Feature-Comparison-across-Different-Versions).
 
-## Prerequisites
+## Quick Start
 
-### Get the latest source code
+Snap is the recommended way to install the latest binaries.
 
-To get the latest source code, you should also update the submodules as following:
+### Install snap core
+
+https://snapcraft.io/core
+
+### Install from snapcraft.io
+
+Stable channel:
 
 ```bash
-git clone https://github.com/shadowsocks/shadowsocks-libev.git
-cd shadowsocks-libev
-git submodule update --init --recursive
+sudo snap install shadowsocks-libev
 ```
 
-### Build and install with recent libsodium
+Edge channel:
 
-You have to install libsodium at least 1.0.8, but recommended 1.0.12 or later version before building. See [Directly build and install on UNIX-like system](#linux).
+```bash
+sudo snap install shadowsocks-libev --edge
+```
 
 ## Installation
 
@@ -98,15 +104,6 @@ For more info about backports, you can refer [Debian Backports](https://backport
 sudo sh -c 'printf "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/stretch-backports.list'
 sudo apt update
 sudo apt -t stretch-backports install shadowsocks-libev
-```
-
-For **Ubuntu 14.04 and 16.04** users, please install from PPA:
-
-```bash
-sudo apt-get install software-properties-common -y
-sudo add-apt-repository ppa:max-c-lv/shadowsocks-libev -y
-sudo apt-get update
-sudo apt install shadowsocks-libev
 ```
 
 #### Build deb package from source
@@ -408,6 +405,13 @@ you may refer to the man pages of the applications, respectively.
                                   (not available in redir mode)
 
        [-b <local_address>]       Local address to bind.
+                                  For servers: Specify the local address to use 
+                                  while this server is making outbound 
+                                  connections to remote servers on behalf of the
+                                  clients.
+                                  For clients: Specify the local address to use 
+                                  while this client is making outbound 
+                                  connections to the server.
 
        [-u]                       Enable UDP relay.
                                   (TPROXY is required in redir mode)

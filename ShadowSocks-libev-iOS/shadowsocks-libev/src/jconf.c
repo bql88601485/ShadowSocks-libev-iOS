@@ -1,7 +1,7 @@
 /*
  * jconf.c - Parse the JSON format config file
  *
- * Copyright (C) 2013 - 2018, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  * shadowsocks-libev is free software; you can redistribute it and/or modify
@@ -107,8 +107,7 @@ parse_addr(const char *str_in, ss_addr_t *addr)
         } else {
             addr->host = ss_strndup(str, ret);
         }
-        if (ret < len - 1)
-        {
+        if (ret < len - 1) {
             addr->port = strdup(str + ret + 1);
         } else {
             addr->port = NULL;
@@ -220,7 +219,7 @@ read_jconf(const char *file)
                     }
                 } else if (value->type == json_string) {
                     parse_addr(to_string(value), conf.remote_addr);
-                    conf.remote_num          = 1;
+                    conf.remote_num = 1;
                 }
             } else if (strcmp(name, "port_password") == 0) {
                 if (value->type == json_object) {
@@ -241,6 +240,10 @@ read_jconf(const char *file)
                 conf.remote_port = to_string(value);
             } else if (strcmp(name, "local_address") == 0) {
                 conf.local_addr = to_string(value);
+            } else if (strcmp(name, "local_ipv4_address") == 0) {
+                conf.local_addr_v4 = to_string(value);
+            } else if (strcmp(name, "local_ipv6_address") == 0) {
+                conf.local_addr_v6 = to_string(value);
             } else if (strcmp(name, "local_port") == 0) {
                 conf.local_port = to_string(value);
             } else if (strcmp(name, "password") == 0) {

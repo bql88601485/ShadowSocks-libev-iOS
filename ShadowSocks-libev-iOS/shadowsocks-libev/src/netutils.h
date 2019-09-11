@@ -1,7 +1,7 @@
 /*
  * netutils.h - Network utilities
  *
- * Copyright (C) 2013 - 2018, Max Lv <max.c.lv@gmail.com>
+ * Copyright (C) 2013 - 2019, Max Lv <max.c.lv@gmail.com>
  *
  * This file is part of the shadowsocks-libev.
  *
@@ -29,13 +29,11 @@
 #include <sys/socket.h>
 #endif
 
-#ifdef HAVE_LINUX_TCP_H
+#if defined(HAVE_LINUX_TCP_H)
 #include <linux/tcp.h>
 #elif defined(HAVE_NETINET_TCP_H)
 #include <netinet/tcp.h>
-#endif
-
-#ifdef HAVE_NETDB_H
+#elif defined(HAVE_NETDB_H)
 #include <netdb.h>
 #endif
 
@@ -51,6 +49,11 @@
 #undef TCP_FASTOPEN_CONNECT
 #endif
 #endif
+
+#define MAX_HOSTNAME_LEN 256 // FQCN <= 255 characters
+#define MAX_PORT_STR_LEN 6   // PORT < 65536
+
+#define SOCKET_BUF_SIZE (16 * 1024 - 1) // 16383 Byte, equals to the max chunk size
 
 typedef struct {
     char *host;
@@ -83,7 +86,11 @@ int set_reuseport(int socket);
 int setinterface(int socket_fd, const char *interface_name);
 #endif
 
-int bind_to_address(int socket_fd, const char *address);
+int parse_local_addr(struct sockaddr_storage *storage_v4,
+                     struct sockaddr_storage *storage_v6,
+                     const char *host);
+
+int bind_to_addr(struct sockaddr_storage *storage, int socket_fd);
 
 /**
  * Compare two sockaddrs. Imposes an ordering on the addresses.
@@ -108,6 +115,6 @@ int sockaddr_cmp_addr(struct sockaddr_storage *addr1,
 
 int validate_hostname(const char *hostname, const int hostname_len);
 
-int is_ipv6only(ss_addr_t *servers, size_t server_num);
+int is_ipv6only(ss_addr_t *servers, size_t server_num, int ipv6first);
 
 #endif
