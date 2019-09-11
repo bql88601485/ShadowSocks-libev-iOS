@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ShadowSocks-libev-iOS'
-  s.version          = '3.2.5'
+  s.version          = '3.2.6'
   s.summary          = 'Wrapper for ShadowSocks-libev.'
 
 # This description is used to generate tags and improve search results.
@@ -126,6 +126,12 @@ This pod wraps ShadowSocks-libev and contains all necessary dependencies to comp
     ipset.dependency 'ShadowSocks-libev-iOS/libcork'
     ipset.xcconfig = { 'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/ShadowSocks-libev-iOS/shadowsocks-libev/libipset/include ${PODS_ROOT}/#{s.name}/ShadowSocks-libev-iOS/shadowsocks-libev/libipset/src" }
   end
+
+    s.subspec 'libbloom' do |libbloom|
+        cares.preserve_paths = 'ShadowSocks-libev-iOS/libbloom/**/*.h'
+        cares.libraries = 'libbloom'
+        cares.xcconfig = { 'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/ShadowSocks-libev-iOS/libbloom/" }
+    end
 
   s.subspec 'c-ares' do |cares|
     cares.preserve_paths = 'ShadowSocks-libev-iOS/c-ares/include/**/*.h'
