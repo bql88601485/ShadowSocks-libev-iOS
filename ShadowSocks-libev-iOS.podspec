@@ -29,7 +29,7 @@ This pod wraps ShadowSocks-libev and contains all necessary dependencies to comp
   s.social_media_url = 'https://github.com/juvham/ShadowSocks-libev-iOS.git'
 
   s.platform = :ios
-  s.ios.deployment_target = '10.2'
+  s.ios.deployment_target = '10'
 
   s.prepare_command = 'sh prepare.sh'
 
